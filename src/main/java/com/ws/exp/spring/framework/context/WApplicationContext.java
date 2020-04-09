@@ -71,8 +71,15 @@ public class WApplicationContext extends WDefaultListableBeanFactory implements 
         }
     }
 
+    /**
+     * DI操作
+     * @param beanName factoryBeanName
+     * @return
+     * @throws Exception
+     */
     @Override
     public Object getBean(String beanName) throws Exception {
+        WBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
         return null;
     }
 
