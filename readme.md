@@ -4,6 +4,17 @@
 
 自己手写的代码都以W开头，以和spring framework中的代码进行区分
 
+## 通用概念
+
+- WBeanDefinition中定义的类名
+  - factoryBeanName: .class文件的类名，首字母小写，不包含包名，例如wBeanDefinition
+  - beanClassName: .class文件的全类名，包含包名，例如com.ws.exp.spring.framework.beans.config.WBeanDefinition
+  
+## 假设
+
+- 没有重复的类名
+- 没有重复使用的接口
+
 ## 1. IoC容器
 
 - src/main/java/com.ws.exp.spring.framework.annotation: 注解
@@ -28,3 +39,12 @@
   
 ## 2. DI
 
+- com.ws.exp.spring.framework.context.WApplicationContext
+  - 加载application.properties配置文件
+  - 扫描.class文件，生成BeanDefinition，保存到内存中beanDefinitionMap
+  - 对@WAutowired注解的域进行DI
+  - getBean()对beanDefinition进行实例化，并在内存中进行缓存，使bean真正可用
+  
+## 3. MVC
+
+- 

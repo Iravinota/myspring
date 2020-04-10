@@ -1,6 +1,7 @@
 package com.ws.test;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.URL;
 
 /**
@@ -9,6 +10,9 @@ import java.net.URL;
  * @author Eric at 2020-04-08_16:10
  */
 public class URLTest implements Serializable {
+    private String aaa;
+    private URLTest urlTest;
+
     public void testURL() {
         URL url = this.getClass().getResource("/com/ws/exp");
         System.out.println(url);    // file:/E:/pro/javapro/02-experiment/myspring/target/classes/com/ws/exp
@@ -33,9 +37,23 @@ public class URLTest implements Serializable {
         }
     }
 
+    public void testFields() {
+        try {
+            Class<?> beanClass = Class.forName("com.ws.test.URLTest");
+            Field[] fields = beanClass.getDeclaredFields();
+            System.out.println("----testFields----");
+            for (Field field : fields) {
+                System.out.println(field.getType().getName());
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         URLTest urlTest = new URLTest();
         urlTest.testURL();
         urlTest.testClass();
+        urlTest.testFields();
     }
 }

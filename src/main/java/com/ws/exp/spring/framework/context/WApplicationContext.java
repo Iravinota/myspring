@@ -1,11 +1,15 @@
 package com.ws.exp.spring.framework.context;
 
+import com.ws.exp.spring.framework.annotation.WAutowired;
+import com.ws.exp.spring.framework.annotation.WController;
+import com.ws.exp.spring.framework.annotation.WService;
 import com.ws.exp.spring.framework.beans.WBeanWrapper;
 import com.ws.exp.spring.framework.beans.config.WBeanDefinition;
 import com.ws.exp.spring.framework.beans.support.WBeanDefinitionReader;
 import com.ws.exp.spring.framework.beans.support.WDefaultListableBeanFactory;
 import com.ws.exp.spring.framework.core.WBeanFactory;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,9 +23,9 @@ public class WApplicationContext extends WDefaultListableBeanFactory implements 
 
     private String[] configLocations;
     private WBeanDefinitionReader reader;
-    // 单例的IoC容器
+    // 单例的IoC容器 <beanClassName, classInstance>
     private Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>();
-    // 通用的IoC容器
+    // 通用的IoC容器 <factoryBeanName, wrappered-bean-instance>
     private Map<String, WBeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
 
     public WApplicationContext(String ... configLocations) {
@@ -80,7 +84,89 @@ public class WApplicationContext extends WDefaultListableBeanFactory implements 
     @Override
     public Object getBean(String beanName) throws Exception {
         WBeanDefinition beanDefinition = super.beanDefinitionMap.get(beanName);
-        return null;
+        Object instance = null;
+
+//        WBeanPostProcessor postProcessor = new WBeanPostProcessor();
+//        postProcessor.postProcessBeforeInitialization(instance, beanName);
+
+        instance = instantiateBean(beanName, beanDefinition);
+        if (instance == null) {
+            return null;
+        }
+
+        WBeanWrapper beanWrapper = new WBeanWrapper(instance);
+        this.factoryBeanInstanceCache.put(beanName, beanWrapper);
+
+//        postProcessor.postProcessAfterInitialization(instance, beanName);
+
+        // 注入
+        populateBean(beanName, new WBeanDefinition(), beanWrapper);
+
+        return factoryBeanInstanceCache.get(beanName).getWrappedInstance();
+    }
+
+    // 对添加了注解@WController或@WService的类，进行依赖注入
+
+    /**
+     *
+     * @param beanName 没用
+     * @param beanDefinition 没用
+     * @param beanWrapper 对这个beanWrapper中的bean实例进行Autowired处理
+     */
+    private void populateBean(String beanName, WBeanDefinition beanDefinition, WBeanWrapper beanWrapper) {
+        Object instance = beanWrapper.getWrappedInstance();
+        Class<?> clazz = beanWrapper.getWrappedClass();
+
+        // 判断只有加了注解的类，才执行依赖注入
+        if (!(clazz.isAnnotationPresent(WController.class) ||
+                clazz.isAnnotationPresent(WService.class))) {
+            return;
+        }
+
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (!field.isAnnotationPresent(WAutowired.class)) { // 处理@WAutowired注解
+                continue;
+            }
+
+            WAutowired autowired = field.getAnnotation(WAutowired.class);
+            String autowiredBeanName = autowired.value().trim();
+            if ("".equals(autowiredBeanName)) {
+                autowiredBeanName = field.getType().getName();  // 这里得到的是全类名java.lang.String
+            }
+
+            // 强制访问
+            field.setAccessible(true);
+            try {
+                if (this.factoryBeanInstanceCache.get(autowiredBeanName) == null) {
+                    continue;
+                }
+                // Eric - 把实例instance中的域field的值设置为value
+                field.set(instance, factoryBeanInstanceCache.get(autowiredBeanName).getWrappedInstance());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // 从factoryBeanObjectCache中获取已有的bean，或者新建一个bean实例
+    private Object instantiateBean(String beanName, WBeanDefinition beanDefinition) {
+        String className = beanDefinition.getBeanClassName();
+        Object instance = null;
+        try {
+            if (this.factoryBeanObjectCache.containsKey(className)) {
+                instance = this.factoryBeanObjectCache.get(className);
+            } else {
+                Class<?> clazz = Class.forName(className);
+                instance = clazz.newInstance();
+
+                this.factoryBeanObjectCache.put(className, instance);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return instance;
     }
 
     @Override
