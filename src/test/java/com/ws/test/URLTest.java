@@ -3,6 +3,7 @@ package com.ws.test;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Arrays;
 
 /**
  * URLTest
@@ -50,10 +51,15 @@ public class URLTest implements Serializable {
         }
     }
 
+    public void testArrays() {
+        System.out.println(Arrays.toString(new String[]{"aaa", "bbb"}));
+    }
+
     public static void main(String[] args) {
         URLTest urlTest = new URLTest();
         urlTest.testURL();
         urlTest.testClass();
         urlTest.testFields();
+        urlTest.testArrays();
     }
 }
