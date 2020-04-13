@@ -12,6 +12,7 @@ import com.ws.exp.spring.framework.core.WBeanFactory;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -172,5 +173,17 @@ public class WApplicationContext extends WDefaultListableBeanFactory implements 
     @Override
     public Object getBean(Class<?> beanClass) throws Exception {
         return getBean(beanClass.getSimpleName());  // 这里是factoryBeanName，是只有最后的类名的
+    }
+
+    public String[] getBeanDefinitionNames() {
+        return this.beanDefinitionMap.keySet().toArray(new  String[this.beanDefinitionMap.size()]);
+    }
+
+    public int getBeanDefinitionCount(){
+        return this.beanDefinitionMap.size();
+    }
+
+    public Properties getConfig() {
+        return reader.getConfig();
     }
 }

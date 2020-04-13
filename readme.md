@@ -47,4 +47,10 @@
   
 ## 3. MVC
 
-- 
+- com.ws.exp.spring.framework.webmvc.servlet.WDispacherServlet
+  - MVC入口
+  - init(): 初始化ApplicationContext作为容器，初始化URL/method/instance间对应关系
+  - 还有一些处理URL参数和method参数匹配的设置，以及模板解析、返回信息处理
+  - 核心功能就是根据URL找到对应method，并把URL上送的参数传入method，处理完之后，返回前端
+  - 核心函数：init(), doDispach()
+  
